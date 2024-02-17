@@ -3,6 +3,7 @@ import clsx from 'clsx';
 
 import { RowSelectionProvider, useLatestFunc } from './hooks';
 import { getColSpan, getRowStyle } from './utils';
+import { isValueInBetween } from './utils/Helpers';
 import type { CalculatedColumn, RenderRowProps } from './types';
 import Cell from './Cell';
 import { rowClassname, rowSelectedClassname } from './style/row';
@@ -14,6 +15,7 @@ function Row<R, SR>(
     gridRowStart,
     height,
     selectedCellIdx,
+    selectedCellsRange,
     isRowSelected,
     copiedCellIdx,
     draggedOverCellIdx,
@@ -28,7 +30,11 @@ function Row<R, SR>(
     setDraggedOverRowIdx,
     onMouseEnter,
     onRowChange,
+    onCellMouseDown,
+    onCellMouseUp,
+    onCellMouseEnter,
     selectCell,
+    rangeSelectionMode,
     ...props
   }: RenderRowProps<R, SR>,
   ref: React.Ref<HTMLDivElement>
@@ -62,7 +68,10 @@ function Row<R, SR>(
       index += colSpan - 1;
     }
 
-    const isCellSelected = selectedCellIdx === idx;
+    const isCellSelected =
+      selectedCellIdx === idx ||
+      (rangeSelectionMode &&
+        isValueInBetween(idx, selectedCellsRange.startIdx, selectedCellsRange.endIdx));
 
     if (isCellSelected && selectedCellEditor) {
       cells.push(selectedCellEditor);
@@ -82,6 +91,10 @@ function Row<R, SR>(
           onContextMenu={onCellContextMenu}
           onRowChange={handleRowChange}
           selectCell={selectCell}
+          onMouseDownCapture={() => onCellMouseDown?.(row, column)}
+          onMouseUpCapture={() => onCellMouseUp?.(row, column)}
+          onMouseEnter={() => onCellMouseEnter?.(column.idx)}
+          rangeSelectionMode={rangeSelectionMode}
         />
       );
     }
